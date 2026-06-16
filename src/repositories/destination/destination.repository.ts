@@ -97,11 +97,11 @@ export const destinationRepository = {
       { nama: "Pelayanan", skor: stats.skorPelayanan },
     ];
 
-    // Get sentiment percentages for each aspect
+    // Get sentiment percentages for each aspect — parallelized
+    const fields = ["labelFasilitas", "labelKebersihan", "labelHarga", "labelAksesibilitas", "labelPelayanan"] as const;
     const sentDists: Record<string, { positif: number }> = {};
-    for (const a of ["labelFasilitas", "labelKebersihan", "labelHarga", "labelAksesibilitas", "labelPelayanan"] as const) {
-      sentDists[a] = await getSentimentDistribution(t.id, a);
-    }
+    const results = await Promise.all(fields.map((f) => getSentimentDistribution(t.id, f)));
+    fields.forEach((f, i) => { sentDists[f] = results[i]; });
 
     const aspekWithSentiment = aspekList.map((a) => {
       const keyMap: Record<string, string> = {

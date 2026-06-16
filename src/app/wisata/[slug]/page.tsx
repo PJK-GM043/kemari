@@ -1,9 +1,6 @@
 import { destinationService } from "@/services/destination.service";
-import { reviewService } from "@/services/review.service";
-import { HeroSection, AspectSection, SentimentSection, RingkasanAnalisis } from "@/components/destination/DetailSections";
-import { ReviewListClient } from "./ReviewListClient";
-import { ToggleSection } from "@/components/ui/ToggleSection";
-import type { SentimentDistributionDTO, ReviewDTO, PaginationDTO } from "@/types";
+import { HeroSection, AspectSection, RingkasanAnalisis } from "@/components/destination/DetailSections";
+import type { SentimentDistributionDTO } from "@/types";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -19,41 +16,38 @@ export default async function DetailPage({ params }: { params: { slug: string } 
     );
   }
 
-  let initialReviews: { data: ReviewDTO[]; pagination: PaginationDTO } = {
-    data: [],
-    pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
-  };
   let description: string | null = null;
   let galeri: string[] = [];
   let sampleReviews: string[] = [];
 
   try {
-    const tempat = await prisma.masterTempat.findUnique({
-      where: { slug: params.slug },
-      include: { galeri: { orderBy: { order: "asc" } } },
-    });
+    const tempatId = detail.tempat.id;
+
+    const [tempat, samples] = await Promise.all([
+      prisma.masterTempat.findUnique({
+        where: { id: tempatId },
+        select: { description: true, galeri: { orderBy: { order: "asc" }, take: 10 } },
+      }),
+      (prisma.ulasanWisata as any).findMany({
+        where: { tempatId, ulasanFinal: { not: "" } },
+        select: { ulasanFinal: true, sentimen: true },
+        take: 20,
+      }),
+    ]);
+
     if (tempat) {
-      initialReviews = await reviewService.getMany({ tempatId: tempat.id, page: 1, limit: 10 });
       description = tempat.description;
       galeri = (tempat as any).galeri?.map((g: any) => g.imageUrl) ?? [];
-
-      // Fetch sample review quotes (2 positive + 2 negative)
-      const samples: any[] = await (prisma.ulasanWisata as any).findMany({
-        where: { tempatId: tempat.id, ulasanFinal: { not: "" } },
-        select: { ulasanFinal: true, aspek: true, sentimen: true },
-        take: 20,
-      });
-      const positive = samples.filter((s: any) => s.sentimen.some((sent: string) => sent === "positive"));
-      const negative = samples.filter((s: any) => s.sentimen.some((sent: string) => sent === "negative"));
-      const posQuotes = positive.slice(0, 2).map((s: any) => s.ulasanFinal.slice(0, 120).trim());
-      const negQuotes = negative.slice(0, 2).map((s: any) => s.ulasanFinal.slice(0, 120).trim());
-      sampleReviews = [...posQuotes, ...negQuotes];
     }
+
+    const positive = (samples as any[]).filter((s: any) => s.sentimen?.some((sent: string) => sent === "positive"));
+    const negative = (samples as any[]).filter((s: any) => s.sentimen?.some((sent: string) => sent === "negative"));
+    const posQuotes = positive.slice(0, 2).map((s: any) => s.ulasanFinal.slice(0, 120).trim());
+    const negQuotes = negative.slice(0, 2).map((s: any) => s.ulasanFinal.slice(0, 120).trim());
+    sampleReviews = [...posQuotes, ...negQuotes];
   } catch {
     // fallback to empty
   }
-
-  const totalUlasan = detail.hero.totalUlasan.toLocaleString("id-ID");
 
   return (
     <div>
@@ -86,21 +80,6 @@ export default async function DetailPage({ params }: { params: { slug: string } 
         source={detail.sentiment.source}
         sampleReviews={sampleReviews}
       />
-
-      <ToggleSection title="Distribusi Sentimen">
-        <SentimentSection
-          source={detail.sentiment.source}
-          distributions={detail.sentiment as unknown as Record<string, SentimentDistributionDTO>}
-        />
-      </ToggleSection>
-
-      <ToggleSection title="Ulasan Pengunjung" count={totalUlasan}>
-        <ReviewListClient
-          slug={params.slug}
-          initialReviews={initialReviews.data}
-          initialPagination={initialReviews.pagination}
-        />
-      </ToggleSection>
     </div>
   );
 }

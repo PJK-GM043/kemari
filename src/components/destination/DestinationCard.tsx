@@ -1,6 +1,5 @@
-import type { DestinationCardDTO, Predikat } from "@/types";
+import type { DestinationCardDTO } from "@/types";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -34,7 +33,10 @@ export function DestinationCard({ destination }: DestinationCardProps) {
             <h3 className="text-label font-semibold text-foreground truncate">{nama}</h3>
             <p className="text-caption text-foreground-secondary mt-0.5">{kota.nama}</p>
           </div>
-          <ScoreBadgeMini predikat={predikat} skor={skor} />
+          <div className="shrink-0 flex flex-col items-center">
+            <span className="text-heading font-bold text-brand leading-none">{skor.toFixed(1)}</span>
+            <span className="text-[10px] text-foreground-secondary mt-0.5">{predikat.label}</span>
+          </div>
         </div>
 
         <p className="text-caption text-foreground-secondary mt-sm">
@@ -42,20 +44,5 @@ export function DestinationCard({ destination }: DestinationCardProps) {
         </p>
       </Card>
     </Link>
-  );
-}
-
-function ScoreBadgeMini({ predikat, skor }: { predikat: Predikat; skor: number }) {
-  const colorMap: Record<string, string> = {
-    accent: "accent",
-    foreground: "default",
-    warning: "neutral",
-    negative: "negative",
-  };
-
-  return (
-    <Badge variant={colorMap[predikat.color] as any}>
-      {skor.toFixed(1)}
-    </Badge>
   );
 }
