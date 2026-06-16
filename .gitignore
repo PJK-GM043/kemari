@@ -9,6 +9,9 @@
 # testing
 /coverage
 
+/data
+.env
+
 # next.js
 /.next/
 /out/
@@ -34,3 +37,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+package-lock.json
+
+/src/generated/prisma
+
+.vercel

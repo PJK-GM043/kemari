@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ReviewSource {
+  GOOGLE_MAPS
+  TIKTOK
+  WEB_APPS
+}
+
+enum SentimentLabel {
+  positive
+  neutral
+  negative
+  none
+}
+
+enum ReviewStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+model MasterKota {
+  id        Int      @id @default(autoincrement())
+  nama      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  tempat MasterTempat[]
+
+  @@map("master_kota")
+}
+
+model MasterTempat {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  nama        String
+  imageUrl    String?
+  description String?
+  kategori    String?
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  kotaId Int
+  kota   MasterKota @relation(fields: [kotaId], references: [id])
+
+  ulasan    UlasanWisata[]
+  statistik StatistikTempat?
+  galeri    GaleriFoto[]
+
+  @@index([kotaId])
+  @@map("master_tempat")
+}
+
+model GaleriFoto {
+  id       Int    @id @default(autoincrement())
+  imageUrl String
+  order    Int    @default(0)
+  tempatId Int
+  tempat   MasterTempat @relation(fields: [tempatId], references: [id], onDelete: Cascade)
+
+  @@index([tempatId])
+  @@map("galeri_foto")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  image     String?
+  password  String?
+  emailVerified DateTime?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviews  UlasanWisata[]
+  accounts Account[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refreshToken      String? @db.Text
+  accessToken       String? @db.Text
+  expiresAt         Int?
+  tokenType         String?
+  scope             String?
+  idToken           String? @db.Text
+  sessionState      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model UlasanWisata {
+  id               String   @id
+  tanggal          DateTime @default(now())
+  ulasan           String
+  ulasanTranslated String?
+  ulasanFinal      String
+  rating           Float?
+  sumber           ReviewSource
+  guestUsername    String?
+
+  labelFasilitas     SentimentLabel @default(none)
+  labelKebersihan    SentimentLabel @default(none)
+  labelHarga         SentimentLabel @default(none)
+  labelAksesibilitas SentimentLabel @default(none)
+  labelPelayanan     SentimentLabel @default(none)
+
+  aspek    String[]
+  sentimen String[]
+
+  status       ReviewStatus @default(PENDING)
+  processedAt  DateTime?
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+
+  tempatId Int
+  userId   Int?
+
+  tempat MasterTempat @relation(fields: [tempatId], references: [id])
+  user   User?        @relation(fields: [userId], references: [id])
+
+  @@index([tempatId])
+  @@index([userId])
+  @@index([sumber])
+  @@map("ulasan_wisata")
+}
+
+model StatistikTempat {
+  id        Int @id @default(autoincrement())
+  tempatId  Int @unique
+
+  skor              Float
+  totalUlasan       Int
+  skorFasilitas     Float
+  skorKebersihan    Float
+  skorHarga         Float
+  skorAksesibilitas Float
+  skorPelayanan     Float
+
+  insight Json?
+
+  totalGoogleMaps Int @default(0)
+  totalTiktok     Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tempat MasterTempat @relation(fields: [tempatId], references: [id])
+
+  @@map("statistik_tempat")
+}
+
+model Pengaturan {
+  key   String @id
+  value String
+
+  @@map("pengaturan")
+}
