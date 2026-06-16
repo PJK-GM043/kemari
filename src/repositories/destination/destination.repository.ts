@@ -37,7 +37,7 @@ export const destinationRepository = {
     const [data, total] = await Promise.all([
       prisma.masterTempat.findMany({
         where: where as any,
-        include: { kota: true, statistik: true },
+        include: { kota: true, statistik: true, galeri: { take: 1, orderBy: { order: "asc" } } },
         skip,
         take: limit,
         orderBy: orderBy as any,
@@ -50,7 +50,7 @@ export const destinationRepository = {
       slug: t.slug,
       nama: t.nama,
       kota: { id: t.kota.id, nama: t.kota.nama },
-      imageUrl: t.imageUrl,
+      imageUrl: t.galeri?.[0]?.imageUrl ?? t.imageUrl,
       kategori: t.kategori,
       skor: t.statistik?.skor ?? 0,
       predikat: getPredikat(t.statistik?.skor ?? 0),

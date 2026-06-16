@@ -56,7 +56,7 @@ export const destinationService = {
         ...(kota && { kota: { slug: kota } }),
         statistik: { isNot: null },
       } as any,
-      include: { kota: true, statistik: true },
+      include: { kota: true, statistik: true, galeri: { take: 1, orderBy: { order: "asc" } } },
       orderBy: { statistik: { [orderField]: "desc" } } as any,
       take: limit,
     });
@@ -68,7 +68,7 @@ export const destinationService = {
       kota: t.kota.nama,
       skor: t.statistik?.skor ?? 0,
       predikat: getPredikat(t.statistik?.skor ?? 0).label,
-      thumbnail: t.imageUrl,
+      thumbnail: t.galeri?.[0]?.imageUrl ?? t.imageUrl,
     }));
   },
 };
