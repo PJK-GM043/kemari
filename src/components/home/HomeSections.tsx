@@ -53,7 +53,7 @@ export function HeroSection({ rankings }: { rankings: any[] }) {
 
           <Reveal delay={0.3}>
             <div className="flex items-center gap-md flex-wrap">
-              <Button href="/wisata" size="lg" className="bg-brand hover:bg-brand-light text-white border-none">
+              <Button href="/wisata" variant="brand" size="lg">
                 Jelajahi Destinasi
               </Button>
               <Button href="#rekomendasi" variant="ghost" size="lg">

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "brand";
   size?: "sm" | "md" | "lg";
   href?: string;
   onClick?: () => void;
@@ -16,6 +16,7 @@ const variants = {
   secondary: "bg-surface text-foreground border border-border hover:bg-surface-elevated",
   ghost: "bg-transparent text-foreground hover:bg-surface",
   danger: "bg-negative text-white hover:opacity-90",
+  brand: "bg-brand text-white hover:bg-brand-light dark:bg-white dark:text-brand dark:hover:bg-cream",
 };
 
 const sizes = {
