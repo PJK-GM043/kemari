@@ -62,7 +62,7 @@ export function Footer() {
         </div>
 
         <div className="mt-2xl pt-lg border-t border-border flex flex-col sm:flex-row items-center justify-between gap-sm text-caption text-foreground-secondary">
-          <span>© 2025 Kemari. Dibuat dengan ❤️ untuk wisata Indonesia.</span>
+          <span>© 2025 Kemari | PJK-GM043</span>
           <Link href="#" className="hover:text-brand transition-colors">Kebijakan Privasi</Link>
         </div>
       </div>
