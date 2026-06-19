@@ -88,6 +88,13 @@ prisma/                    # Schema & migrations
 
 ---
 
+## Model Documentation
+
+Dokumentasi lengkap model IndoBERT ABSA:  
+[Google Drive — Model Documentation](https://drive.google.com/drive/folders/1z43jhhCmEDTK2vGIiKlhNpq4Ru6RdBnM)
+
+---
+
 ## Getting Started
 
 ### Prerequisites
