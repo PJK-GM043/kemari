@@ -1,36 +1,179 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kemari — AI for Smart Tourism Experience
+
+Platform ulasan wisata berbasis AI yang menganalisis sentimen dari **55.150+ ulasan** Google Maps & TikTok menggunakan **IndoBERT ABSA** (Aspect-Based Sentiment Analysis).
+
+> **Live:** [kemari-pjk.vercel.app](https://kemari-pjk.vercel.app)  
+> **Tim:** PJK-GM043 · Pijak × IBM SkillsBuild
+
+---
+
+## Features
+
+### Public
+| Page | Description |
+|---|---|
+| `/` | Landing page — hero, top recommendations, features, city tabs, FAQ, CTA |
+| `/wisata` | Explore destinations — search, filter (city, category, sort), pagination |
+| `/wisata/[slug]` | Destination detail — hero carousel, 5 aspect scores, AI ringkasan, review quotes |
+| `/login` | User login/register — email/password + Google OAuth |
+| `/profile` | User profile — stats, review history |
+
+### Admin (`/admin`)
+| Page | Description |
+|---|---|
+| `/admin/dashboard` | Stats overview — total destinations, reviews, cities |
+| `/admin/destinasi` | Manage destinations — search, table with edit links |
+| `/admin/destinasi/[id]/edit` | Edit destination — upload photos (Cloudinary), edit description |
+| `/admin/pengaturan` | Settings — upload website logo |
+
+### API
+| Endpoint | Description |
+|---|---|
+| `GET /api/tempat` | Paginated destinations with filters (`q`, `kota`, `kategori`, `sort`) |
+| `GET /api/tempat/[slug]` | Full destination detail with aspect scores + sentiment |
+| `GET /api/tempat/[slug]/ulasan` | Paginated reviews with source filter |
+| `GET /api/rekomendasi` | Ranked recommendations by city/aspect |
+| `GET /api/wisata/autocomplete?q=...` | Search autocomplete (min 3 chars, max 5 results) |
+| `GET /api/kota` | Cities with destination count |
+| `GET /api/health` | Health check — DB + ML status |
+| `POST /api/auth/register` | Email/password registration |
+| `POST /api/admin/tempat/[id]/upload` | Cloudinary photo upload (admin only) |
+| `PATCH /api/admin/tempat/[id]` | Update destination description/publish (admin only) |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Framework** | Next.js 14 (App Router) |
+| **Language** | TypeScript |
+| **Database** | PostgreSQL (Neon) |
+| **ORM** | Prisma 7 |
+| **Auth** | NextAuth.js v4 (Google OAuth + Credentials) |
+| **Styling** | Tailwind CSS · Dark/light mode (next-themes) |
+| **Animation** | Framer Motion |
+| **Images** | Cloudinary |
+| **ML API** | IndoBERT ABSA (Hugging Face Spaces) |
+| **Deployment** | Vercel |
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (public pages)     # Home, Explore, Detail, Login, Profile
+│   ├── admin/             # Admin dashboard, destinasi, settings
+│   └── api/               # REST API routes
+├── components/
+│   ├── ui/                # Buttons, Cards, Badges, Pagination, Input
+│   ├── layout/            # Navbar, Footer, Logo
+│   ├── destination/        # HeroCarousel, DetailSections, DestinationCard
+│   ├── review/            # ReviewCard, ReviewFilter
+│   ├── recommendation/    # RecommendationSection
+│   └── home/              # HeroSection, Features, FAQ, CityTabs, CTA
+├── lib/                   # Auth, Prisma, Logger, Cache, Rate-limit, Errors
+├── repositories/          # Database access layer (5 modules)
+├── services/              # Business logic layer
+├── providers/             # ThemeProvider, SessionProvider
+├── adapters/ml/           # ML API adapter
+├── types/                 # TypeScript DTOs
+├── constants/             # Predikat thresholds, aspect colors
+└── utils/                 # Slugify, getPredikat, formatting
+scripts/                   # ETL pipeline, data generation, admin tools
+prisma/                    # Schema & migrations
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- PostgreSQL database (Neon recommended)
 
+### Setup
 ```bash
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Fill in DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, etc.
+
+# Push database schema
+npx prisma db push
+
+# Seed destinations + reviews
+npm run ingest data/dataset_labeled_web.csv
+
+# Generate descriptions + images
+npx tsx scripts/gen-descriptions.ts
+
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
+```env
+DATABASE_URL=
+DIRECT_URL=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+ML_SERVICE_URL=
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Test Accounts
 
-## Learn More
+| Role | Email | Password |
+|---|---|---|
+| User | `user@kemari.id` | `user123` |
+| Admin | `admin@kemari.id` | `admin123` |
 
-To learn more about Next.js, take a look at the following resources:
+Login at `/login`. Admin access at `/admin`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Data Pipeline
 
-## Deploy on Vercel
+```bash
+# ETL: Import labeled CSV to database
+npm run ingest data/dataset_labeled_web.csv
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Auto-categorize destinations
+npx tsx scripts/set-kategori.ts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Generate descriptions + placeholder images
+npx tsx scripts/gen-descriptions.ts
+
+# Recalculate scores (average of 5 aspects)
+npx tsx scripts/fix-skor.ts
+
+# Create test users
+npx tsx scripts/create-test-users.ts
+```
+
+---
+
+## Deployment
+
+Connected to Vercel via GitHub. Every push to `master` triggers auto-deploy.
+
+```bash
+git push origin master
+```
+
+---
+
+## License
+
+Internal — PJK-GM043 Capstone Project
